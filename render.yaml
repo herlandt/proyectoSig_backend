@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: visorsig-backend
+    runtime: docker
+    repo: https://github.com/herlandt/proyectoSig_backend
+    branch: main
+    plan: free
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: ConnectionStrings__VisorDatosSIG
+        sync: false
+      - key: Seguridad__RutaClaves
+        value: /app/claves
+      - key: Evidencias__Carpeta
+        value: /app/evidencias
+

@@ -20,12 +20,11 @@ builder.Services.AgregarVisorDatosSig(config.GetConnectionString("VisorDatosSIG"
 var rutaClaves = config["Seguridad:RutaClaves"];
 if (string.IsNullOrWhiteSpace(rutaClaves))
     rutaClaves = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "VisorDatosSIG", "claves");
-if (!OperatingSystem.IsWindows())
-    throw new PlatformNotSupportedException("La protección de las claves de sesión requiere Windows.");
-builder.Services.AddDataProtection()
+var dpBuilder = builder.Services.AddDataProtection()
     .SetApplicationName("VisorDatosSIG")
-    .PersistKeysToFileSystem(new DirectoryInfo(rutaClaves))
-    .ProtectKeysWithDpapi(protectToLocalMachine: true);
+    .PersistKeysToFileSystem(new DirectoryInfo(rutaClaves));
+if (OperatingSystem.IsWindows())
+    dpBuilder.ProtectKeysWithDpapi(protectToLocalMachine: true);
 
 int minutosInactividad = config.GetValue("Seguridad:MinutosInactividad", 20);
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
