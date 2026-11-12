@@ -175,11 +175,11 @@ internal sealed class MigracionTransaccionSql(SqlConnection cn, SqlTransaction t
     {
         bool R(string id) => capas.Contains(id, StringComparer.OrdinalIgnoreCase);
         var sql = new List<string>();
-        // Orden inverso a las claves foráneas: CodigosFijos → Lotes → Manzanas.
-        if (R(CatalogoCapas.CodigosFijos)) sql.Add("DELETE FROM dbo.CodigosFijos;");
-        if (R(CatalogoCapas.Lotes)) sql.Add("UPDATE dbo.CodigosFijos SET IdLote = NULL WHERE IdLote IS NOT NULL; DELETE FROM dbo.Lotes;");
-        if (R(CatalogoCapas.Manzanas)) sql.Add("UPDATE dbo.Lotes SET IdManzana = NULL WHERE IdManzana IS NOT NULL; DELETE FROM dbo.Manzanas;");
-        if (R(CatalogoCapas.Vias)) sql.Add("DELETE FROM dbo.Vias;");
+        // Eliminar indices espaciales temporalmente para permitir insercion ultra rapida sin bloqueo de memoria
+        if (R(CatalogoCapas.CodigosFijos)) { sql.Add("DROP INDEX IF EXISTS SIX_CodigosFijos_Geom ON dbo.CodigosFijos;"); sql.Add("DELETE FROM dbo.CodigosFijos;"); }
+        if (R(CatalogoCapas.Lotes)) { sql.Add("DROP INDEX IF EXISTS SIX_Lotes_Geom ON dbo.Lotes;"); sql.Add("UPDATE dbo.CodigosFijos SET IdLote = NULL WHERE IdLote IS NOT NULL; DELETE FROM dbo.Lotes;"); }
+        if (R(CatalogoCapas.Manzanas)) { sql.Add("DROP INDEX IF EXISTS SIX_Manzanas_Geom ON dbo.Manzanas;"); sql.Add("UPDATE dbo.Lotes SET IdManzana = NULL WHERE IdManzana IS NOT NULL; DELETE FROM dbo.Manzanas;"); }
+        if (R(CatalogoCapas.Vias)) { sql.Add("DROP INDEX IF EXISTS SIX_Vias_Geom ON dbo.Vias;"); sql.Add("DELETE FROM dbo.Vias;"); }
         if (sql.Count > 0)
             await cn.ExecuteAsync(new CommandDefinition(string.Join("\n", sql), transaction: tx, commandTimeout: TiempoLargo, cancellationToken: ct));
     }

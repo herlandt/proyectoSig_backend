@@ -102,9 +102,42 @@ BEGIN
     SET NOCOUNT ON;
     SET XACT_ABORT ON;
 
-    CREATE TABLE #PuntosLote(IdLote INT PRIMARY KEY, P geometry NOT NULL);
-    INSERT #PuntosLote(IdLote, P)
-    SELECT IdLote, Geom.STPointOnSurface() FROM dbo.Lotes WHERE Geom IS NOT NULL AND IdManzana IS NULL;
+    -- 1. Vincular Lotes -> Manzanas usando bounding box + STIntersects
+    IF OBJECT_ID('tempdb..#PuntosLote') IS NOT NULL DROP TABLE #PuntosLote;
+    CREATE TABLE #PuntosLote (
+        IdLote INT PRIMARY KEY,
+        X FLOAT NOT NULL,
+        Y FLOAT NOT NULL,
+        P geometry NOT NULL
+    );
+
+    INSERT INTO #PuntosLote (IdLote, X, Y, P)
+    SELECT IdLote,
+           p.STX,
+           p.STY,
+           p
+      FROM dbo.Lotes l
+     CROSS APPLY (SELECT l.Geom.STPointOnSurface() AS p) ap
+     WHERE l.Geom IS NOT NULL AND l.IdManzana IS NULL;
+
+    IF OBJECT_ID('tempdb..#CajasManzanas') IS NOT NULL DROP TABLE #CajasManzanas;
+    CREATE TABLE #CajasManzanas (
+        IdManzana INT PRIMARY KEY,
+        MinX FLOAT NOT NULL,
+        MinY FLOAT NOT NULL,
+        MaxX FLOAT NOT NULL,
+        MaxY FLOAT NOT NULL
+    );
+
+    INSERT INTO #CajasManzanas (IdManzana, MinX, MinY, MaxX, MaxY)
+    SELECT IdManzana,
+           env.STPointN(1).STX,
+           env.STPointN(1).STY,
+           env.STPointN(3).STX,
+           env.STPointN(3).STY
+      FROM dbo.Manzanas m
+     CROSS APPLY (SELECT m.Geom.STEnvelope() AS env) ae
+     WHERE m.Geom IS NOT NULL;
 
     UPDATE l
        SET IdManzana = a.IdManzana
@@ -112,10 +145,37 @@ BEGIN
       JOIN #PuntosLote p ON p.IdLote = l.IdLote
       CROSS APPLY (
           SELECT TOP (1) m.IdManzana
-            FROM dbo.Manzanas m WITH (INDEX(SIX_Manzanas_Geom))
-           WHERE m.Geom.STIntersects(p.P) = 1
+            FROM dbo.Manzanas m
+            JOIN #CajasManzanas cm ON cm.IdManzana = m.IdManzana
+           WHERE p.X >= cm.MinX AND p.X <= cm.MaxX
+             AND p.Y >= cm.MinY AND p.Y <= cm.MaxY
+             AND m.Geom.STIntersects(p.P) = 1
            ORDER BY m.IdManzana
       ) a;
+
+    -- 2. Vincular CodigosFijos -> Lotes usando bounding box + STIntersects
+    IF OBJECT_ID('tempdb..#CajasLotes') IS NOT NULL DROP TABLE #CajasLotes;
+    CREATE TABLE #CajasLotes (
+        IdLote INT PRIMARY KEY,
+        MinX FLOAT NOT NULL,
+        MinY FLOAT NOT NULL,
+        MaxX FLOAT NOT NULL,
+        MaxY FLOAT NOT NULL,
+        Area FLOAT NOT NULL
+    );
+
+    INSERT INTO #CajasLotes (IdLote, MinX, MinY, MaxX, MaxY, Area)
+    SELECT IdLote,
+           env.STPointN(1).STX,
+           env.STPointN(1).STY,
+           env.STPointN(3).STX,
+           env.STPointN(3).STY,
+           l.Geom.STArea()
+      FROM dbo.Lotes l
+     CROSS APPLY (SELECT l.Geom.STEnvelope() AS env) ae
+     WHERE l.Geom IS NOT NULL;
+
+    CREATE NONCLUSTERED INDEX IX_CajasLotes_Bounds ON #CajasLotes(MinX, MaxX, MinY, MaxY) INCLUDE(Area);
 
     UPDATE c
        SET IdLote = a.IdLote
@@ -123,12 +183,14 @@ BEGIN
       OUTER APPLY (
           SELECT TOP (1) l.IdLote
             FROM dbo.Lotes l
+            JOIN #CajasLotes cl ON cl.IdLote = l.IdLote
            WHERE c.Geom IS NOT NULL
              AND l.Geom IS NOT NULL
              AND l.Geom.STSrid = c.Geom.STSrid
-             AND l.Geom.Filter(c.Geom) = 1
+             AND c.Longitud >= cl.MinX AND c.Longitud <= cl.MaxX
+             AND c.Latitud >= cl.MinY AND c.Latitud <= cl.MaxY
              AND l.Geom.STIntersects(c.Geom) = 1
-           ORDER BY l.Geom.STArea(), l.IdLote
+           ORDER BY cl.Area, l.IdLote
       ) a
      WHERE ISNULL(c.IdLote, -1) <> ISNULL(a.IdLote, -1);
 
