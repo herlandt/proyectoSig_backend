@@ -91,7 +91,7 @@ public sealed class RedVial
         NodosComponentePrincipal = tamanos[principal];
         for (int t = 0; t < _tramos.Length; t++)
         {
-            if (componente[_tramos[t].A] != principal) continue;
+            if (tamanos[componente[_tramos[t].A]] < 5) continue;
             var (a, b) = (_nodos[_tramos[t].A], _nodos[_tramos[t].B]);
             for (int cx = Celda(Math.Min(a.Lon, b.Lon)); cx <= Celda(Math.Max(a.Lon, b.Lon)); cx++)
                 for (int cy = Celda(Math.Min(a.Lat, b.Lat)); cy <= Celda(Math.Max(a.Lat, b.Lat)); cy++)
