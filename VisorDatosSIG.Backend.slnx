@@ -1,0 +1,13 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/VisorDatosSIG.Api/VisorDatosSIG.Api.csproj" />
+    <Project Path="src/VisorDatosSIG.Application/VisorDatosSIG.Application.csproj" />
+    <Project Path="src/VisorDatosSIG.Domain/VisorDatosSIG.Domain.csproj" />
+    <Project Path="src/VisorDatosSIG.Herramientas/VisorDatosSIG.Herramientas.csproj" />
+    <Project Path="src/VisorDatosSIG.Infrastructure/VisorDatosSIG.Infrastructure.csproj" />
+    <Project Path="src/VisorDatosSIG.Migrador/VisorDatosSIG.Migrador.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/VisorDatosSIG.Tests/VisorDatosSIG.Tests.csproj" />
+  </Folder>
+</Solution>

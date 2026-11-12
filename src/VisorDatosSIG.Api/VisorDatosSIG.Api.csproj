@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <ItemGroup>
+    <ProjectReference Include="..\VisorDatosSIG.Application\VisorDatosSIG.Application.csproj" />
+    <ProjectReference Include="..\VisorDatosSIG.Infrastructure\VisorDatosSIG.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>57f3ef17-12cb-430e-882c-a6e272575a36</UserSecretsId>
+  </PropertyGroup>
+
+</Project>

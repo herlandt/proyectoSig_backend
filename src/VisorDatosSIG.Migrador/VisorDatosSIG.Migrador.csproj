@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\VisorDatosSIG.Application\VisorDatosSIG.Application.csproj" />
+    <ProjectReference Include="..\VisorDatosSIG.Infrastructure\VisorDatosSIG.Infrastructure.csproj" />
+    <ProjectReference Include="..\VisorDatosSIG.Domain\VisorDatosSIG.Domain.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+</Project>
