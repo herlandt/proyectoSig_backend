@@ -9,5 +9,4 @@ publish/
 .local/
 appsettings.*.local.json
 *.pfx
-claves/
 credenciales.txt
